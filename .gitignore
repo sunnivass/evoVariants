@@ -1,0 +1,7 @@
+# Ignore data and output folders
+data/
+output/
+
+# (Optional) but keep a .gitkeep or README if you want the folder itself tracked
+!data/.gitkeep
+!output/.gitkeep
