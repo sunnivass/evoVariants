@@ -224,3 +224,6 @@ if __name__ == "__main__":
 #  --start 1250034 \
 #  --end 1254567 \
 #  --new-seq ACGTACGT...ACGT
+
+#RPN11 Location: Chromosome VI 153393..154313
+#CEG1 Location: Chromosome VII 266145..267524
