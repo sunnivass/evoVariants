@@ -1,0 +1,11 @@
+name: ampliconvcf
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bwa-mem2
+  - samtools
+  - lofreq
+  - bcftools
+  - python>=3.8
+  - pandas

@@ -1,0 +1,20 @@
+In previous version, replace edited region with new sequence. This made annotation more complicated since coordinates of downstream genes change.
+(what is breseq)
+Steps: 
+- replace region in ref fasta
+- bwa mem and lofreq with new genome
+- Liftoff or crossMap to update coordinates (never implemented this)
+- annotate using bcftools
+
+
+In updated script, the plan is to add a contig with flanking sequences and N-mask the edited locus. less complicated editing but doesnt reflect the true genome. Fast and easy and GATK practice this?
+Steps:
+- Add contig with edited gene + flanking sequences to ref fasta
+- N-mask the locus
+- append edited gene to GFF3 file
+Continue using standard protocols
+
+
+
+
+1 replace_region_fasta.py
