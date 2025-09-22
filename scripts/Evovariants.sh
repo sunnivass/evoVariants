@@ -10,7 +10,7 @@ AF_CUTOFF=0.01
 MAX_JOBS=2 # Number of samples to process in parallel
 
 # ---- sanity checks ----
-for exe in bwa samtools lofreq bcftools; do
+for exe in bwa-mem2 samtools lofreq bcftools; do
   command -v "$exe" >/dev/null 2>&1 || { echo "ERROR: $exe not found in PATH"; exit 1; }
 done
 
@@ -19,7 +19,7 @@ mkdir -p "$RESULTS_DIR"/{bam,vcf,logs}
 # Index reference for BWA if not already done
 if [ ! -f "${REF}.bwt" ]; then
     echo "[INFO] Indexing reference for BWA..."
-    bwa index "$REF" 2> "${RESULTS_DIR}/logs/bwa_index.err"
+    bwa-mem2 index "$REF" 2> "${RESULTS_DIR}/logs/bwa_index.err"
 fi
 
 # Index reference for SAMTOOLS/lofreq (.fai) -- REQUIRED by lofreq
@@ -43,7 +43,7 @@ do
         fi
         
         # Alignment -> sorted BAM
-        bwa mem -t "$THREADS" "$REF" "$FASTQ_1" "$FASTQ_2" 2> "${RESULTS_DIR}/logs/${SAMPLE}.bwa.err" \
+        bwa-mem2 mem -t "$THREADS" "$REF" "$FASTQ_1" "$FASTQ_2" 2> "${RESULTS_DIR}/logs/${SAMPLE}.bwa2.err" \
           | samtools view -Sb - 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_view.err" \
           | samtools sort -@ "$THREADS" -o "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_sort.err"
         

@@ -9,3 +9,7 @@ dependencies:
   - bcftools
   - python>=3.8
   - pandas
+  - fastp
+  - fastqc
+  - multiqc
+
