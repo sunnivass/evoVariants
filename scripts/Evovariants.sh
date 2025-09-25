@@ -2,12 +2,14 @@
 set -euo pipefail
 
 # PARAMETERS
-REF="ref/SFS01decoy_PfRPN11.fa"
+REF="ref/fasta/SFS01decoy_PfRPN11.fa"
 SAMPLESHEET="data/samplesheet_PfRPN11.csv"
 RESULTS_DIR="output"
-THREADS=4
+TRIM_DIR="data/trimmed"
+READ_SOURCE="${READ_SOURCE:-trimmed}" # raw|trimmed (defaults to trimmed output from fastp)
+THREADS=16
 AF_CUTOFF=0.01
-MAX_JOBS=2 # Number of samples to process in parallel
+MAX_JOBS=4 # Number of samples to process in parallel
 
 # ---- sanity checks ----
 for exe in bwa-mem2 samtools lofreq bcftools; do
@@ -30,24 +32,64 @@ fi
 
 job_count=0
 
-# Read the CSV file, skip the header
-tail -n +2 "$SAMPLESHEET" | while IFS=, read -r SAMPLE GROUP FASTQ_1 FASTQ_2
+# Read the CSV file without creating a subshell so we can track background jobs
+while IFS=, read -r SAMPLE GROUP FASTQ_1 FASTQ_2
 do
     (
-        echo "[INFO] Processing sample: $SAMPLE"
+        echo "[INFO] Processing sample: $SAMPLE (reads: $READ_SOURCE)"
+
+        RAW_FASTQ_1="$FASTQ_1"
+        RAW_FASTQ_2="$FASTQ_2"
+
+        case "$READ_SOURCE" in
+            trimmed)
+                if [[ "$FASTQ_1" == *.trimmed.fastq.gz ]]; then
+                    # Samplesheet already points to trimmed reads
+                    :
+                else
+                    base1=$(basename "$FASTQ_1")
+                    base2=$(basename "$FASTQ_2")
+
+                    if [[ "$base1" != *_1.fastq.gz || "$base2" != *_2.fastq.gz ]]; then
+                        echo "ERROR: Unexpected FASTQ naming for $SAMPLE; expected *_1.fastq.gz and *_2.fastq.gz." >&2
+                        exit 1
+                    fi
+
+                    prefix=${base1%_1.fastq.gz}
+                    expected_mate="${prefix}_2.fastq.gz"
+
+                    if [[ "$base2" != "$expected_mate" ]]; then
+                        echo "ERROR: FASTQ pair names for $SAMPLE do not match (${base1} / ${base2})." >&2
+                        exit 1
+                    fi
+
+                    FASTQ_1="${TRIM_DIR}/${prefix}_1.trimmed.fastq.gz"
+                    FASTQ_2="${TRIM_DIR}/${prefix}_2.trimmed.fastq.gz"
+                fi
+                ;;
+            raw)
+                :
+                ;;
+            *)
+                echo "ERROR: Unsupported READ_SOURCE '$READ_SOURCE'. Use 'raw' or 'trimmed'." >&2
+                exit 1
+                ;;
+        esac
 
         # Check that files exist
         if [[ ! -f "$FASTQ_1" || ! -f "$FASTQ_2" ]]; then
-            echo "ERROR: FASTQ files for $SAMPLE not found!"
+            echo "ERROR: FASTQ files for $SAMPLE not found!" >&2
+            if [[ "$READ_SOURCE" == "trimmed" ]]; then
+                echo "       Expected trimmed files at: $FASTQ_1 and $FASTQ_2" >&2
+                echo "       Run scripts/fastqc.sh before scripts/evovariants.sh." >&2
+                echo "       Raw files listed in samplesheet: $RAW_FASTQ_1 and $RAW_FASTQ_2" >&2
+            fi
             exit 1
         fi
         
-        # Alignment -> sorted BAM
+        # Alignment -> sorted BAM (skip intermediate BAM conversion)
         bwa-mem2 mem -t "$THREADS" "$REF" "$FASTQ_1" "$FASTQ_2" 2> "${RESULTS_DIR}/logs/${SAMPLE}.bwa2.err" \
-          | samtools view -Sb - 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_view.err" \
-          | samtools sort -@ "$THREADS" -o "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_sort.err"
-        
-        samtools index "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_index_sorted.err"
+          | samtools sort -@ "$THREADS" -O BAM -o "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_sort.err"
 
         # Add indel qualities (required by LoFreq)
         lofreq indelqual --dindel -f "$REF" \
@@ -57,8 +99,7 @@ do
         samtools index "${RESULTS_DIR}/bam/${SAMPLE}.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_index_indelq.err"
 
         # Delete sorted BAM to save space (keep indelq only)
-        rm -f "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" \
-              "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam.bai"
+        rm -f "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam"
 
         # Variant calling
         set +e
@@ -92,7 +133,7 @@ do
     if (( job_count % MAX_JOBS == 0 )); then
         wait
     fi
-done
+done < <(tail -n +2 "$SAMPLESHEET")
 wait
 
 echo "[INFO] All samples processed successfully."
