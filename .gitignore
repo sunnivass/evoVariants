@@ -1,11 +1,11 @@
-# Ignore data and output folders
-data/
-output/
+# Ignore contents of data/ but keep directory placeholders
+data/*
+!data/.gitkeep
+!data/**/.gitkeep
 
-# Keep curated VCF outputs under version control
+# Ignore contents of output/ (except curated VCFs and placeholders)
+output/*
+!output/.gitkeep
+!output/**/.gitkeep
 !output/vcf/
 !output/vcf/**/*.vcf
-
-# (Optional) but keep a .gitkeep or README if you want the folder itself tracked
-!data/.gitkeep
-!output/.gitkeep
