@@ -7,5 +7,5 @@ data/*
 output/*
 !output/.gitkeep
 !output/**/.gitkeep
-!output/vcf/
-!output/vcf/**/*.vcf
+!output/annotated_vcf/
+!output/annotated_vcf/*.tsv
