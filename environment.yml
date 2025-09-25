@@ -1,4 +1,4 @@
-name: ampliconvcf
+name: variantcalling
 channels:
   - bioconda
   - conda-forge

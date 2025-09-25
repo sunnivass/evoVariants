@@ -9,11 +9,19 @@ Steps:
 
 In updated script, the plan is to add a contig with flanking sequences and N-mask the edited locus. less complicated editing but doesnt reflect the true genome. Fast and easy and GATK practice this?
 Steps:
-- Add contig with edited gene + flanking sequences to ref fasta
+- Add contig with edited gene + flanking sequences to ref fasta (fake chromosome). include intergenic region but keep neighboring genes intact in the original locus
+- decoy contigs to soak up reads to markers
 - N-mask the locus
 - append edited gene to GFF3 file
 Continue using standard protocols
 
+QC/trim: fastp and fastqc
+map: bwa-mem2 mem -R <RG> ref.fa R1.fq.gz R2.fq.gz | samtools sort -o aln.bam
+markdup??
+variant calling:
+lofreq indelqual -f ref.fa -o aln.indelq.bam aln.bam
+samtools index aln.indelq.bam
+lofreq call-parallel --pp-threads 8 -f ref.fa -o variants.vcf.gz aln.indelq.bam
 
 
 

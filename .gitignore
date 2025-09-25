@@ -2,6 +2,9 @@
 data/
 output/
 
+# Keep VCF files generated in output/ (any depth)
+!output/**/*.vcf
+
 # (Optional) but keep a .gitkeep or README if you want the folder itself tracked
 !data/.gitkeep
 !output/.gitkeep

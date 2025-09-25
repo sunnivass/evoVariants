@@ -5,7 +5,7 @@ set -euo pipefail
 RAW_DIR="data/raw"
 TRIM_DIR="data/trimmed"
 QC_DIR="output/qc"
-THREADS=6
+THREADS=16
 
 mkdir -p "$TRIM_DIR" "$QC_DIR"/raw "$QC_DIR"/trimmed
 
@@ -17,6 +17,10 @@ done
 # Run MultiQC to summarize all FastQC
 multiqc "$QC_DIR"/raw -o "$QC_DIR"/raw
 
+# Remove raw FastQC artifacts to keep only the MultiQC summary
+find "$QC_DIR/raw" -maxdepth 1 -name '*_fastqc.html' -delete
+find "$QC_DIR/raw" -maxdepth 1 -name '*_fastqc.zip' -delete
+
 # Run fastp for trimming
 for fq1 in "$RAW_DIR"/*_1.fastq.gz; do
     fq2="${fq1/_1.fastq.gz/_2.fastq.gz}"
@@ -25,7 +29,7 @@ for fq1 in "$RAW_DIR"/*_1.fastq.gz; do
           -o "$TRIM_DIR/${base}_1.trimmed.fastq.gz" \
           -O "$TRIM_DIR/${base}_2.trimmed.fastq.gz" \
           -w "$THREADS" \
-          --html "$QC_DIR/trimmed/${base}_fastp.html" 
+          --html "$QC_DIR/trimmed/${base}_fastp.html"
 done
 
 # Run FastQC on trimmed files
@@ -35,5 +39,9 @@ done
 
 # Run MultiQC to summarize all FastQC
 multiqc "$QC_DIR"/trimmed -o "$QC_DIR"/trimmed
+
+# Remove trimmed FastQC artifacts to keep only the MultiQC summary
+find "$QC_DIR/trimmed" -maxdepth 1 -name '*_fastqc.html' -delete
+find "$QC_DIR/trimmed" -maxdepth 1 -name '*_fastqc.zip' -delete
 
 echo "[INFO] QC and trimming complete."
