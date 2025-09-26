@@ -1,0 +1,3 @@
+sample,group,fastq_1,fastq_2
+control1,control,data/test/subset_control1_1.fastq.gz,data/test/subset_control1_2.fastq.gz
+control2,control,data/test/subset_control2_1.fastq.gz,data/test/subset_control2_2.fastq.gz
