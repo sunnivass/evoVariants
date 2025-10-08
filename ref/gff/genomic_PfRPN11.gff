@@ -27176,5 +27176,4 @@ NC_001224.1	RefSeq	exon	85295	85777	.	+	.	ID=exon-Q0285-1;Parent=rna-Q0285;Dbxre
 PfRPN11	.	gene	269	1204	.	+	.	ID=PfRpn11;Name=PfRPN11;gene_biotype=protein_coding
 PfRPN11	.	mRNA	269	1204	.	+	.	ID=transcript1;Parent=PfRPN11
 PfRPN11	.	CDS	269	1204	.	+	0	ID=cds1;Parent=transcript1;Name=PfRPN11;Note=P. falciparum 26S proteasome regulatory subunit RPN11
-PfRPN11    .  5'UTR   1   268    .	+	.	ID=utr5-1;Parent=transcript1
 ###

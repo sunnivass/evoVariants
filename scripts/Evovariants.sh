@@ -2,14 +2,14 @@
 set -euo pipefail
 
 # PARAMETERS
-REF="ref/fasta/SFS01decoy_PfRPN11.fa"
+REF="ref/fasta/sacCer3_SFS01decoy_PfRpn11.fa"
 SAMPLESHEET="data/samplesheet_PfRPN11.csv"
 RESULTS_DIR="output"
 TRIM_DIR="data/trimmed"
 READ_SOURCE="${READ_SOURCE:-trimmed}" # raw|trimmed (defaults to trimmed output from fastp)
-THREADS=16
+THREADS=18
 AF_CUTOFF=0.01
-MAX_JOBS=4 # Number of samples to process in parallel
+MAX_JOBS=1 # Number of samples to process in parallel
 
 # ---- sanity checks ----
 for exe in bwa-mem2 samtools lofreq bcftools; do
@@ -32,10 +32,16 @@ fi
 
 job_count=0
 
-# Read the CSV file without creating a subshell so we can track background jobs
-while IFS=, read -r SAMPLE GROUP FASTQ_1 FASTQ_2
-do
-    (
+# Read the samplesheet directly (skip header without spawning tail)
+{
+    if ! IFS= read -r _header; then
+        echo "ERROR: Samplesheet $SAMPLESHEET is empty or missing a header." >&2
+        exit 1
+    fi
+
+    while IFS=, read -r SAMPLE GROUP FASTQ_1 FASTQ_2
+    do
+        (
         echo "[INFO] Processing sample: $SAMPLE (reads: $READ_SOURCE)"
 
         RAW_FASTQ_1="$FASTQ_1"
@@ -128,12 +134,13 @@ do
         rm -f "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf"
 
         echo "[INFO] Finished $SAMPLE."
-    ) &
+        ) &
     job_count=$((job_count+1))
     if (( job_count % MAX_JOBS == 0 )); then
         wait
     fi
-done < <(tail -n +2 "$SAMPLESHEET")
+    done
+} < "$SAMPLESHEET"
 wait
 
 echo "[INFO] All samples processed successfully."
