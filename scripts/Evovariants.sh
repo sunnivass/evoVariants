@@ -93,18 +93,22 @@ job_count=0
             exit 1
         fi
         
-        # Alignment -> sorted BAM (skip intermediate BAM conversion)
+        # Alignment -> coordinate-sorted BAM
         bwa-mem2 mem -t "$THREADS" "$REF" "$FASTQ_1" "$FASTQ_2" 2> "${RESULTS_DIR}/logs/${SAMPLE}.bwa2.err" \
           | samtools sort -@ "$THREADS" -O BAM -o "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_sort.err"
 
+        # Remove PCR duplicates (required before LoFreq)
+        samtools markdup -@ "$THREADS" -r "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" \
+            "${RESULTS_DIR}/bam/${SAMPLE}.dedup.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_markdup.err"
+
         # Add indel qualities (required by LoFreq)
         lofreq indelqual --dindel -f "$REF" \
-            -o "${RESULTS_DIR}/bam/${SAMPLE}.indelq.bam" \
-            "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_indelqual.err"
+            -o "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" \
+            "${RESULTS_DIR}/bam/${SAMPLE}.dedup.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_indelqual.err"
 
-        samtools index "${RESULTS_DIR}/bam/${SAMPLE}.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_index_indelq.err"
+        samtools index "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_index_dedup_indelq.err"
 
-        # Delete sorted BAM to save space (keep indelq only)
+        # Delete sorted BAM to save space (keep dedup and dedup+indelq outputs)
         rm -f "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam"
 
         # Variant calling
@@ -113,7 +117,7 @@ job_count=0
             --pp-threads "$THREADS" \
             -f "$REF" \
             -o "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf" \
-            "${RESULTS_DIR}/bam/${SAMPLE}.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_parallel.err"
+            "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_parallel.err"
         rc=$?
         set -e
 
@@ -122,7 +126,7 @@ job_count=0
             lofreq call \
                 -f "$REF" \
                 -o "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf" \
-                "${RESULTS_DIR}/bam/${SAMPLE}.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_single.err"
+                "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_single.err"
         fi
 
         # Filtering by allele frequency
