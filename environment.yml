@@ -6,10 +6,16 @@ dependencies:
   - bwa-mem2
   - samtools
   - lofreq
-  - bcftools
-  - python>=3.8
+  - bcftools>=1.22
+  - python>=3.11
   - pandas
   - fastp
   - fastqc
   - multiqc
-
+  - htslib>=1.17
+  - tabix
+  - snpeff=5.2
+  - openjdk=17
+  - pip
+  - pip:
+      - cyvcf2>=0.30.28

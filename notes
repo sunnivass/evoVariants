@@ -24,5 +24,16 @@ samtools index aln.indelq.bam
 lofreq call-parallel --pp-threads 8 -f ref.fa -o variants.vcf.gz aln.indelq.bam
 
 
+0 
+A. have manually appended custom contigs in the ref.fa. easiest is to find the ORF in yeastgenome.org and download +/- 1kb flanking seq but that will extend into other ORFs. So find the intergenic region in SGD, add partialORF features in Snapgene or other gene viewers and then copy that.
+B. Manually appended gene to GFF file
+- would be nice to make this more reproducible
+1 nmask_fasta.py # you need to know the start and end of the ORF and chromosome no. of the gene you want to mask
+2 fastqc.sh
+3 evoVariants.sh
+4 Annotate:
+A. annotateVCF.sh - using bcftools. was not working very well with lofreq vcf files
+B. annotate_lofreq.py or norm-annotate-lofreq.sh - WIP
+- requires snpeff_build.sh before running.
 
-1 replace_region_fasta.py
+

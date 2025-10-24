@@ -1,0 +1,5 @@
+# Keep this file in the repo so you don't touch the global conda snpEff.config
+# data.dir = ./snpeff_data
+sacCer3_custom.genome : sacCer3_custom
+data.dir = snpeff_data
+sacCer3_HsGTase_v1.genome : sacCer3_HsGTase_v1

@@ -1,0 +1,2 @@
+sample,group,fastq_1,fastq_2
+mutant1,mutant,data/raw/NG-A5996_HsCEG1_mut1_libLAR5514_1.fastq.gz,data/raw/NG-A5996_HsCEG1_mut1_libLAR5514_2.fastq.gz

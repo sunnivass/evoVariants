@@ -27176,5 +27176,4 @@ NC_001224.1	RefSeq	exon	85295	85777	.	+	.	ID=exon-Q0285-1;Parent=rna-Q0285;Dbxre
 yHsGTase-CEG1	.	gene	286	1327	.	+	.	ID=HsGTase-CEG1;Name=HsGTase-CEG1;gene_biotype=protein_coding
 yHsGTase-CEG1	.	mRNA	286	1327	.	+	.	ID=transcript1;Parent=HsGTase-CEG1
 yHsGTase-CEG1	.	CDS	286	1327	.	+	0	ID=cds1;Parent=transcript1;Name=HsGTase-CEG1;Note=human guanylyltransferase-CEG1
-yHsGTase-CEG1    .  5'UTR   1   285    .	+	.	ID=utr5-1;Parent=transcript1
 ###
