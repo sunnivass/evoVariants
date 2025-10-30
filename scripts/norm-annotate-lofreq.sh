@@ -27,7 +27,7 @@ Required:
   --genome-id ID         SnpEff genome ID you built (e.g., sacCer3_strainA_v1)
 
 Recommended:
-  --cfg FILE             repo-local snpEff.config (default: snpeff_data/snpEff.config)
+  --cfg FILE             repo-local snpEff.config (default: snpeff_data/snpeff.config)
   --datadir DIR          SnpEff data dir (default: snpeff_data)
 
 I/O:
@@ -95,6 +95,7 @@ command -v bcftools >/dev/null || { echo "bcftools not found in PATH"; exit 1; }
 command -v snpEff >/dev/null   || { echo "snpEff not found in PATH"; exit 1; }
 command -v bgzip >/dev/null    || { echo "bgzip (htslib) not found in PATH"; exit 1; }
 command -v tabix >/dev/null    || { echo "tabix not found in PATH"; exit 1; }
+command -v python3 >/dev/null  || { echo "python3 not found in PATH"; exit 1; }
 
 mkdir -p "$NORM_DIR" "$ANN_DIR"
 
@@ -173,17 +174,28 @@ ann_cols = [
 key_cols = ["CHROM", "POS", "REF", "ALT"]
 
 impact_rank = {"HIGH": 0, "MODERATE": 1, "LOW": 2, "MODIFIER": 3}
+feature_rank = {
+    "gene": 0,
+    "gene_variant": 0,
+    "transcript": 1,
+    "regulatory": 1,
+    "intergenic_region": 2,
+}
 
 
 def summarize_ann(raw_ann: str):
     default_summary = {col: "" for col in ann_cols}
-    best_summary = default_summary
-    best_score = float("inf")
+    best_effect_summary = default_summary
+    best_gene_summary = default_summary
+    # Track best effect (impact rank + index) and best gene alias score separately.
+    best_effect_score = (float("inf"), float("inf"))
+    best_gene_score = (1, 2, 3, float("inf"))
 
     if not raw_ann:
-        return best_summary, best_score
+        combined_score = best_effect_score + best_gene_score
+        return best_effect_summary, combined_score
 
-    for entry in raw_ann.split(","):
+    for idx, entry in enumerate(raw_ann.split(",")):
         parts = entry.split("|")
         if len(parts) < 16:
             parts += [""] * (16 - len(parts))
@@ -196,13 +208,45 @@ def summarize_ann(raw_ann: str):
             "ANN_BIOTYPE": parts[7],
             "ANN_HGVS_P": parts[10],
         }
-        score = impact_rank.get(annotation["ANN_IMPACT"], float("inf"))
+        effect_rank = impact_rank.get(annotation["ANN_IMPACT"], float("inf"))
+        effect_candidate = (effect_rank, idx)
+        if effect_candidate < best_effect_score:
+            best_effect_summary = annotation
+            best_effect_score = effect_candidate
 
-        if score < best_score:
-            best_summary = annotation
-            best_score = score
+        gene_missing = 1 if not annotation["ANN_GENE_NAME"] else 0
+        gene_name = annotation["ANN_GENE_NAME"] or ""
+        gene_id = annotation["ANN_GENE_ID"] or ""
+        gene_name_lower = gene_name.lower()
+        if not gene_name:
+            gene_name_score = 2
+        elif gene_name == gene_id:
+            gene_name_score = 1
+        elif gene_name_lower.startswith("gene:"):
+            gene_name_score = 1
+        elif "mrna" in gene_name_lower or "rna" in gene_name_lower:
+            gene_name_score = 1
+        elif gene_name_lower.startswith("gene_"):
+            gene_name_score = 1
+        else:
+            gene_name_score = 0
 
-    return best_summary, best_score
+        feature_type = parts[5]
+        feature_score = feature_rank.get(feature_type, 3)
+
+        gene_candidate = (gene_missing, gene_name_score, feature_score, idx)
+
+        if gene_candidate < best_gene_score:
+            best_gene_summary = annotation
+            best_gene_score = gene_candidate
+
+    combined = best_effect_summary.copy()
+    if best_gene_score[0] == 0:
+        combined["ANN_GENE_NAME"] = best_gene_summary.get("ANN_GENE_NAME", combined["ANN_GENE_NAME"])
+        combined["ANN_GENE_ID"] = best_gene_summary.get("ANN_GENE_ID", combined["ANN_GENE_ID"])
+
+    combined_score = best_effect_score + best_gene_score
+    return combined, combined_score
 
 
 variants = OrderedDict()
@@ -238,7 +282,7 @@ for sample_file in sample_files:
                 }
                 variants[key] = entry
             else:
-                if ann_score < entry.get('ann_score', float('inf')):
+                if ann_score < entry.get('ann_score', (float('inf'), float('inf'), 1, 2, 3, float('inf'))):
                     entry['ann'] = ann_summary
                     entry['ann_score'] = ann_score
 

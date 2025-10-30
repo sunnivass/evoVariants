@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # PARAMETERS (default values; overridable via CLI flags)
-REF="ref/fasta/sacCer3_SFS01decoy_HsGTaseCeg1.masked2.fa"
+REF="ref/fasta/masked/R64-1-1_SFS01decoy_HsCEG1-GTase.masked.fa"
 SAMPLESHEET="data/samplesheet_HsCeg1.csv"
 RESULTS_DIR="output"
 TRIM_DIR="data/trimmed"
@@ -18,11 +18,11 @@ usage() {
 Usage: scripts/Evovariants.sh [options]
 
 Options:
-  -s, --samplesheet FILE    Path to samplesheet CSV (default: data/samplesheet_PfRPN11.csv)
+  -s, --samplesheet FILE    Path to samplesheet CSV (default: data/samplesheet_HsCEG1.csv)
   -1, --fastq1 FILE         FASTQ R1 path for single-sample mode (requires --fastq2 and --sample)
   -2, --fastq2 FILE         FASTQ R2 path for single-sample mode (requires --fastq1 and --sample)
   -n, --sample NAME         Sample name for single-sample mode
-  -r, --ref FILE            Reference FASTA path (default: ref/fasta/sacCer3_SFS01decoy_PfRpn11.fa)
+  -r, --ref FILE            Reference FASTA path (default: ref/fasta/masked/R64-1-1_SFS01decoy_HsCEG1-GTase.masked.fa)
   -t, --threads N           Number of threads to use (default: 18)
   -a, --af-cutoff FLOAT     Allele frequency cutoff for bcftools filter (default: 0.01)
   -R, --read-source MODE    Read source: raw|trimmed (default: trimmed)
