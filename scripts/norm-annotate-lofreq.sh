@@ -135,7 +135,7 @@ for V in "$NORM_DIR"/*.vcf.gz; do
   b=$(basename "$V" .vcf.gz)
   out="$ANN_DIR/${b}.snpeff.vcf.gz"
   echo "  - $b.vcf.gz -> $(basename "$out")"
-  snpEff -Xmx"$HEAP" -c "$CFG" -dataDir "$DATADIR" -v "$GENOME_ID" -noStats "$V" \
+  snpEff -Xmx"$HEAP" -c "$CFG" -dataDir "$DATADIR" -noDownload -v "$GENOME_ID" -noStats "$V" \
     | bgzip -@ "$THREADS" -c > "$out"
   tabix -f "$out"
 
@@ -169,6 +169,7 @@ ann_cols = [
     "ANN_GENE_NAME",
     "ANN_GENE_ID",
     "ANN_BIOTYPE",
+    "ANN_HGVS_C",
     "ANN_HGVS_P",
 ]
 key_cols = ["CHROM", "POS", "REF", "ALT"]
@@ -206,6 +207,7 @@ def summarize_ann(raw_ann: str):
             "ANN_GENE_NAME": parts[3],
             "ANN_GENE_ID": parts[4],
             "ANN_BIOTYPE": parts[7],
+            "ANN_HGVS_C": parts[9],
             "ANN_HGVS_P": parts[10],
         }
         effect_rank = impact_rank.get(annotation["ANN_IMPACT"], float("inf"))

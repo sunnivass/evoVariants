@@ -10,11 +10,11 @@ set -euo pipefail
 #     --fasta ref/strainA.fa \
 #     --gff ref/strainA.gff3 \
 #     --data-dir snpeff_data \
-#     --config snpeff_data/snpEff.config \
+#     --config snpeff_data/snpeff.config \
 #     --display-name "sacCer3 strain A (v1)"
 #
 # Then annotate with:
-#   snpEff -c snpeff_data/snpEff.config -dataDir snpeff_data -v sacCer3_strainA_v1 in.vcf.gz | bgzip -c > out.vcf.gz
+#   snpEff -c snpeff_data/snpeff.config -dataDir snpeff_data -v sacCer3_strainA_v1 in.vcf.gz | bgzip -c > out.vcf.gz
 
 usage() {
   cat <<EOF
@@ -27,7 +27,7 @@ Required:
 
 Options:
   --data-dir DIR         SnpEff data directory (default: snpeff_data)
-  --config FILE          Path to repo-local snpEff.config (default: snpeff_data/snpEff.config)
+  --config FILE          Path to repo-local snpeff.config (default auto-detects snpeff.config or snpEff.config in data dir)
   --display-name NAME    Human-readable name in config (default: same as --genome-id)
   --force                Overwrite existing genome folder if it exists
   --no-check             Skip contig-name sanity checks
@@ -37,6 +37,7 @@ Notes:
 - This script copies FASTA/GFF into: <data-dir>/<genome-id>/{sequences.fa,genes.gff}
 - It appends "<genome-id>.genome : <display-name>" to the local snpEff.config (if missing).
 - Requires: snpEff, java, md5sum, awk, sort, comm
+- Uses snpEff build with -noCheckCds -noCheckProtein to tolerate custom GFFs lacking CDS/protein checks.
 EOF
 }
 
@@ -100,14 +101,30 @@ done
 [[ -f "$FASTA" ]] || { echo "Error: FASTA not found: $FASTA" >&2; exit 1; }
 [[ -f "$GFF" ]] || { echo "Error: GFF3 not found: $GFF" >&2; exit 1; }
 
-CONFIG="${CONFIG:-${DATA_DIR}/snpEff.config}"
+DATA_DIR=$(resolve_path "$DATA_DIR")
+
+DEFAULT_CONFIG_LOWER="${DATA_DIR%/}/snpeff.config"
+DEFAULT_CONFIG_UPPER="${DATA_DIR%/}/snpEff.config"
+if [[ -z "$CONFIG" ]]; then
+  if [[ -f "$DEFAULT_CONFIG_LOWER" ]]; then
+    CONFIG="$DEFAULT_CONFIG_LOWER"
+  elif [[ -f "$DEFAULT_CONFIG_UPPER" ]]; then
+    CONFIG="$DEFAULT_CONFIG_UPPER"
+  else
+    CONFIG="$DEFAULT_CONFIG_LOWER"
+  fi
+else
+  CONFIG=$(resolve_path "$CONFIG")
+fi
 DISPLAY_NAME="${DISPLAY_NAME:-${GENOME_ID}}"
+
+echo "Using config file: $CONFIG"
 
 mkdir -p "$DATA_DIR"
 
 # Create / update local snpEff.config
 if [[ ! -f "$CONFIG" ]]; then
-  echo "Creating local snpEff.config at: $CONFIG"
+  echo "Creating local snpeff.config at: $CONFIG"
   cat > "$CONFIG" <<EOF
 # Repo-local SnpEff config
 data.dir = ${DATA_DIR}
@@ -181,7 +198,7 @@ fi
 
 # Build the DB
 echo "Building SnpEff DB: ${GENOME_ID}"
-snpEff build -c "$CONFIG" -dataDir "$DATA_DIR" -gff3 -v "$GENOME_ID"
+snpEff build -c "$CONFIG" -dataDir "$DATA_DIR" -noCheckCds -noCheckProtein -gff3 -v "$GENOME_ID"
 
 # Record provenance
 SNPEFF_VER=$(snpEff -version 2>/dev/null | awk '{print $NF}')

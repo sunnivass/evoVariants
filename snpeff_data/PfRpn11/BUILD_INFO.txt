@@ -1,0 +1,10 @@
+Date: 2025-11-21T12:10:29+01:00
+Genome ID: PfRpn11
+Display name: PfRpn11
+SnpEff version: 2023-09-29
+Java: openjdk version "17.0.17-internal" 2025-10-21
+FASTA source: /home/sunniva/git-code/evoVariants/ref/fasta/R64-1-1_SFS01decoy_PfRPN11.fa
+FASTA md5: f07c5a62f342544b8578a35729bdf32e
+GFF3 source: /home/sunniva/git-code/evoVariants/ref/gff/R64-1-1_SFS01decoy_PfRPN11.gff3
+GFF3 md5: fd9ece48b8eca354375f65693ea92278
+Command: snpEff build -c /home/sunniva/git-code/evoVariants/snpeff_data/snpeff.config -dataDir /home/sunniva/git-code/evoVariants/snpeff_data -gff3 -v PfRpn11

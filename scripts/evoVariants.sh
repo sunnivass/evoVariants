@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # PARAMETERS (default values; overridable via CLI flags)
-REF="ref/fasta/masked/R64-1-1_SFS01decoy_HsCEG1-GTase.masked.fa"
-SAMPLESHEET="data/samplesheet_HsCeg1.csv"
+REF="ref/fasta/masked/R64-1-1_SFS01decoy_PfRPN11.masked.fa"
+SAMPLESHEET="data/samplesheet_PfRPN11.csv"
 RESULTS_DIR="output"
 TRIM_DIR="data/trimmed"
 READ_SOURCE="${READ_SOURCE:-trimmed}" # raw|trimmed (defaults to trimmed output from fastp)

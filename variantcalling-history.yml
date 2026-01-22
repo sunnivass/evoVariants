@@ -1,0 +1,22 @@
+name: /home/sunniva/anaconda3/envs/variantcalling
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - samtools
+  - fastqc
+  - bcftools[version='>=1.22']
+  - bwa-mem2
+  - fastp
+  - multiqc
+  - lofreq
+  - pandas
+  - python[version='>=3.11']
+  - seqtk
+  - openjdk=17
+  - tabix
+  - pip
+  - htslib[version='>=1.17']
+  - snpeff=5.2
+prefix: /home/sunniva/anaconda3/envs/variantcalling
