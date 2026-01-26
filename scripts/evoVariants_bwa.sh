@@ -8,23 +8,21 @@ RESULTS_DIR="output"
 TRIM_DIR="data/trimmed"
 READ_SOURCE="${READ_SOURCE:-trimmed}" # raw|trimmed (defaults to trimmed output from fastp)
 THREADS=18
-AF_CUTOFF=0.01
 MAX_JOBS=1 # Number of samples to process in parallel
 
 declare -a RUNNING_PIDS=()
 
 usage() {
     cat <<'EOF'
-Usage: scripts/Evovariants.sh [options]
+Usage: scripts/evoVariants_bwa.sh [options]
 
 Options:
-  -s, --samplesheet FILE    Path to samplesheet CSV (default: data/samplesheet_HsCEG1.csv)
+  -s, --samplesheet FILE    Path to samplesheet CSV (default: data/samplesheet_PfRPN11-2.csv)
   -1, --fastq1 FILE         FASTQ R1 path for single-sample mode (requires --fastq2 and --sample)
   -2, --fastq2 FILE         FASTQ R2 path for single-sample mode (requires --fastq1 and --sample)
   -n, --sample NAME         Sample name for single-sample mode
-  -r, --ref FILE            Reference FASTA path (default: ref/fasta/masked/R64-1-1_SFS01decoy_HsCEG1-GTase.masked.fa)
+  -r, --ref FILE            Reference FASTA path (default: ref/fasta/masked/R64-1-1_SFS01decoy_PfRPN11.masked.fa)
   -t, --threads N           Number of threads to use (default: 18)
-  -a, --af-cutoff FLOAT     Allele frequency cutoff for bcftools filter (default: 0.01)
   -R, --read-source MODE    Read source: raw|trimmed (default: trimmed)
   -h, --help                Show this help and exit
 
@@ -68,11 +66,6 @@ while [[ $# -gt 0 ]]; do
         -t|--threads)
             [[ $# -lt 2 ]] && { echo "ERROR: --threads requires a value." >&2; exit 1; }
             THREADS="$2"
-            shift 2
-            ;;
-        -a|--af-cutoff)
-            [[ $# -lt 2 ]] && { echo "ERROR: --af-cutoff requires a value." >&2; exit 1; }
-            AF_CUTOFF="$2"
             shift 2
             ;;
         -R|--read-source)
@@ -138,7 +131,6 @@ fi
 echo "[INFO] Configuration:"
 echo "[INFO]   Reference: $REF"
 echo "[INFO]   Threads: $THREADS"
-echo "[INFO]   AF cutoff: $AF_CUTOFF"
 echo "[INFO]   Read source: $READ_SOURCE"
 if (( USE_SAMPLESHEET )); then
     echo "[INFO]   Samplesheet: $SAMPLESHEET"
@@ -149,11 +141,11 @@ else
 fi
 
 # ---- sanity checks ----
-for exe in bwa-mem2 samtools lofreq bcftools; do
+for exe in bwa-mem2 samtools; do
   command -v "$exe" >/dev/null 2>&1 || { echo "ERROR: $exe not found in PATH"; exit 1; }
 done
 
-mkdir -p "$RESULTS_DIR"/{bam,vcf,logs}
+mkdir -p "$RESULTS_DIR"/{bam,logs}
 
 # Index reference for BWA if not already done
 if [ ! -f "${REF}.bwt" ]; then
@@ -161,7 +153,7 @@ if [ ! -f "${REF}.bwt" ]; then
     bwa-mem2 index "$REF" 2> "${RESULTS_DIR}/logs/bwa_index.err"
 fi
 
-# Index reference for SAMTOOLS/lofreq (.fai) -- REQUIRED by lofreq
+# Index reference for SAMTOOLS (.fai)
 if [ ! -f "${REF}.fai" ]; then
     echo "[INFO] Indexing reference for samtools (FAI)..."
     samtools faidx "$REF" 2> "${RESULTS_DIR}/logs/samtools_faidx.err"
@@ -217,7 +209,7 @@ process_sample() {
             echo "ERROR: FASTQ files for $SAMPLE not found!" >&2
             if [[ "$READ_SOURCE" == "trimmed" ]]; then
                 echo "       Expected trimmed files at: $FASTQ_1 and $FASTQ_2" >&2
-                echo "       Run scripts/fastqc.sh before scripts/evovariants.sh." >&2
+                echo "       Run scripts/fastqc.sh before scripts/evoVariants_bwa.sh." >&2
                 echo "       Original FASTQs provided: $RAW_FASTQ_1 and $RAW_FASTQ_2" >&2
             fi
             exit 1
@@ -253,38 +245,8 @@ process_sample() {
         rm -f \
             "${RESULTS_DIR}/bam/${SAMPLE}.namesort.bam" \
             "${RESULTS_DIR}/bam/${SAMPLE}.fixmate.bam" \
-            "${RESULTS_DIR}/bam/${SAMPLE}.fixmate.primary.bam"
-
-        lofreq indelqual --dindel -f "$REF" \
-            -o "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" \
-            "${RESULTS_DIR}/bam/${SAMPLE}.dedup.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_indelqual.err"
-
-        samtools index "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.samtools_index_dedup_indelq.err"
-
-        rm -f "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam"
-
-        set +e
-        lofreq call-parallel \
-            --pp-threads "$THREADS" \
-            -f "$REF" \
-            -o "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf" \
-            "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_parallel.err"
-        rc=$?
-        set -e
-
-        if [ $rc -ne 0 ]; then
-            echo "[WARN] lofreq call-parallel failed for ${SAMPLE} (see logs). Retrying with single-threaded lofreq call..."
-            lofreq call \
-                -f "$REF" \
-                -o "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf" \
-                "${RESULTS_DIR}/bam/${SAMPLE}.dedup.indelq.bam" 2> "${RESULTS_DIR}/logs/${SAMPLE}.lofreq_call_single.err"
-        fi
-
-        bcftools filter -i "AF>${AF_CUTOFF}" \
-            "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf" \
-            -o "${RESULTS_DIR}/vcf/${SAMPLE}.filtered.vcf" 2> "${RESULTS_DIR}/logs/${SAMPLE}.bcftools_filter.err"
-
-        rm -f "${RESULTS_DIR}/vcf/${SAMPLE}.raw.vcf"
+            "${RESULTS_DIR}/bam/${SAMPLE}.fixmate.primary.bam" \
+            "${RESULTS_DIR}/bam/${SAMPLE}.sorted.bam"
 
         echo "[INFO] Finished $SAMPLE."
     ) &

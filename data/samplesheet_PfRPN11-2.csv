@@ -1,0 +1,11 @@
+sample,group,fastq_1,fastq_2
+control1,control,data/raw/NG-A5572_PfRpn11_control1_libLAQ7442_libLAR3522_1.fastq.gz,data/raw/NG-A5572_PfRpn11_control1_libLAQ7442_libLAR3522_2.fastq.gz
+control2,control,data/raw/NG-A5572_PfRpn11_control2_libLAQ7440_libLAR3520_1.fastq.gz,data/raw/NG-A5572_PfRpn11_control2_libLAQ7440_libLAR3520_2.fastq.gz
+control3,control,data/raw/NG-A5572_PfRpn11_control3_libLAQ7441_libLAR3521_1.fastq.gz,data/raw/NG-A5572_PfRpn11_control3_libLAQ7441_libLAR3521_2.fastq.gz
+control-par,control,data/raw/NG-A6859_PfRPN11_parent_libLAT8592_1.fastq.gz,data/raw/NG-A6859_PfRPN11_parent_libLAT8592_2.fastq.gz
+capz_L2_14,mutant,data/raw/NG-A6859_capz_L2_14_libLAT8593_1.fastq.gz,data/raw/NG-A6859_capz_L2_14_libLAT8593_2.fastq.gz
+capz_W3_5_18,mutant,data/raw/NG-A6859_capz_W3_5_18_libLAT8594_1.fastq.gz,data/raw/NG-A6859_capz_W3_5_18_libLAT8594_2.fastq.gz
+capz_W4_25,mutant,data/raw/NG-A6859_capz_W4_25_libLAT8595_1.fastq.gz,data/raw/NG-A6859_capz_W4_25_libLAT8595_2.fastq.gz
+capz_W6_11,mutant,data/raw/NG-A6859_capz_W6_11_libLAT8596_1.fastq.gz,data/raw/NG-A6859_capz_W6_11_libLAT8596_2.fastq.gz
+8tq_W3_37,mutant,data/raw/NG-A6859_8tq_W3_35_libLAT8597_1.fastq.gz,data/raw/NG-A6859_8tq_W3_35_libLAT8597_2.fastq.gz
+8tq_W6_37,mutant,data/raw/NG-A6859_8tq_W6_35_libLAT8598_1.fastq.gz,data/raw/NG-A6859_8tq_W6_35_libLAT8598_2.fastq.gz

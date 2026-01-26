@@ -293,6 +293,7 @@ for sample_file in sample_files:
 header = base_cols[:]
 header.extend(ann_cols)
 for sample in sample_order:
+    header.append(f"{sample}_PRESENT")
     header.append(f"{sample}_DP")
     header.append(f"{sample}_AF")
 
@@ -306,7 +307,15 @@ with open(merged_path, 'w', newline='') as out_handle:
         row_out.extend(ann_values.get(col, '') for col in ann_cols)
         for sample in sample_order:
             dp, af = entry['values'].get(sample, ('', ''))
-            row_out.extend([dp, af])
+            present = '0'
+            try:
+                dp_val = float(dp)
+                af_val = float(af)
+                if dp_val >= 100 and af_val >= 0.1:
+                    present = '1'
+            except (TypeError, ValueError):
+                pass
+            row_out.extend([present, dp, af])
         writer.writerow(row_out)
 PY
 fi
