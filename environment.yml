@@ -16,6 +16,10 @@ dependencies:
   - tabix
   - snpeff=5.2
   - openjdk=17
+  - scipy
+  - matplotlib
+  - seaborn
   - pip
   - pip:
       - cyvcf2>=0.30.28
+      - gprofiler-official>=1.0.0
