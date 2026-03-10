@@ -1,0 +1,7 @@
+sample,group,fastq_1,fastq_2
+PV1,mutant,data/raw/NMT1/NG-28544_NMT_PV1_lib513320_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV1_lib513320_7673_2_2.fastq.gz
+PV2,mutant,data/raw/NMT1/NG-28544_NMT_PV2_lib513321_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV2_lib513321_7673_2_2.fastq.gz
+PV3,mutant,data/raw/NMT1/NG-28544_NMT_PV3_lib513322_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV3_lib513322_7673_2_2.fastq.gz
+PV4,mutant,data/raw/NMT1/NG-28544_NMT_PV4_lib513323_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV4_lib513323_7673_2_2.fastq.gz
+PC,control,data/raw/NMT1/NG-28544_NMT_PV_PC_lib513319_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV_PC_lib513319_7673_2_2.fastq.gz
+WT,control,data/raw/NMT1/NG-28544_NMT_PV_WT_lib513318_7673_2_1.fastq.gz,data/raw/NMT1/NG-28544_NMT_PV_WT_lib513318_7673_2_2.fastq.gz

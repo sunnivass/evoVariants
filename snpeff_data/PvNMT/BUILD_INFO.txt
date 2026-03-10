@@ -1,0 +1,10 @@
+Date: 2026-03-10T15:42:01+01:00
+Genome ID: PvNMT
+Display name: PvNMT
+SnpEff version: 2023-09-29
+Java: openjdk version "17.0.17-internal" 2025-10-21
+FASTA source: /home/sunniva/git-code/evoVariants/ref/fasta/Scer.R64-1-1.pvNMT.fna
+FASTA md5: 463840b2b28b6aa77ce60b7b2b59b27c
+GFF3 source: /home/sunniva/git-code/evoVariants/ref/gff/R64-1-1.115_PvNMT.gff3
+GFF3 md5: ca6007fab3d2dc2a05caa2eb0e1977f3
+Command: snpEff build -c /home/sunniva/git-code/evoVariants/snpeff_data/snpeff.config -dataDir /home/sunniva/git-code/evoVariants/snpeff_data -gff3 -v PvNMT
